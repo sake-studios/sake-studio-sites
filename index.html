@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sake Studio</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0c0c0e;
+    --surface: #131316;
+    --surface2: #1c1c21;
+    --accent: #e8e8f0;
+    --text: #e8e8f0;
+    --muted: #6b6b78;
+    --muted2: #3a3a44;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --line: rgba(255,255,255,0.05);
+  }
+
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+
+  /* SCROLL BAR */
+  #scroll-bar {
+    position: fixed; top: 0; left: 0; height: 1px;
+    background: rgba(255,255,255,0.3);
+    width: 0%; z-index: 1000; transition: width 0.1s;
+  }
+
+  /* NAV DOTS */
+  #nav-dots {
+    position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 14px; z-index: 999;
+  }
+  .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--muted2); cursor: pointer;
+    transition: all 0.3s;
+  }
+  .dot.active { background: var(--text); transform: scale(1.6); }
+
+  /* SECTIONS */
+  section {
+    min-height: 100vh; scroll-snap-align: start;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 80px 32px; position: relative; overflow: hidden;
+  }
+
+  /* ─── HERO ─── */
+  #hero { background: var(--bg); }
+
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .logo-wrap {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+    animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+
+  .logo-img-placeholder {
+    width: 120px; height: 120px;
+    border: 1px solid var(--border-hover);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--muted); text-align: center; padding: 12px;
+    background: var(--surface);
+    letter-spacing: 0.5px;
+  }
+
+  .logo-name {
+    font-size: clamp(40px, 8vw, 88px);
+    font-weight: 300;
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .logo-tagline {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .hero-divider {
+    width: 40px; height: 1px; background: var(--border-hover);
+  }
+
+  .scroll-hint {
+    position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 10px; letter-spacing: 3px;
+    text-transform: uppercase; z-index: 1;
+    animation: fadeHint 2s ease-in-out infinite;
+  }
+  @keyframes fadeHint { 0%,100% { opacity: 0.4; transform: translateX(-50%) translateY(0); } 50% { opacity: 0.8; transform: translateX(-50%) translateY(6px); } }
+  .scroll-hint svg { opacity: 0.4; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-label {
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px; text-align: center;
+    position: relative; z-index: 1;
+  }
+  .section-title {
+    font-size: clamp(24px, 3.5vw, 40px); font-weight: 300;
+    margin-bottom: 56px; text-align: center;
+    position: relative; z-index: 1;
+    letter-spacing: -0.5px;
+  }
+
+  /* ─── DONATE ─── */
+  #donate { background: var(--bg); }
+
+  .donate-cards {
+    display: flex; flex-wrap: wrap; gap: 1px;
+    justify-content: center; z-index: 1; position: relative;
+    max-width: 840px; width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    background: var(--border);
+  }
+  .donate-card {
+    flex: 1 1 240px;
+    background: var(--surface);
+    padding: 36px 28px;
+    display: flex; flex-direction: column; gap: 14px;
+    cursor: pointer; transition: background 0.2s; text-decoration: none; color: inherit;
+  }
+  .donate-card:hover { background: var(--surface2); }
+  .donate-logo {
+    width: 48px; height: 48px; border-radius: 10px;
+    border: 1px solid var(--border-hover); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--muted); text-align: center; padding: 5px;
+    letter-spacing: 0.3px;
+  }
+  .donate-card h3 { font-size: 15px; font-weight: 500; }
+  .donate-card p { font-size: 13px; color: var(--muted); line-height: 1.6; flex: 1; }
+  .donate-link {
+    font-size: 12px; color: var(--muted); letter-spacing: 1px;
+    text-transform: uppercase; display: flex; align-items: center; gap: 6px;
+    transition: color 0.2s;
+  }
+  .donate-card:hover .donate-link { color: var(--text); }
+
+  /* ─── APPLY ─── */
+  #apply { background: var(--bg); }
+
+  .apply-cards {
+    display: flex; flex-wrap: wrap; gap: 20px;
+    justify-content: center; z-index: 1; position: relative;
+    max-width: 1020px; width: 100%;
+  }
+  .apply-card {
+    flex: 1 1 280px; max-width: 320px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 36px 28px;
+    display: flex; flex-direction: column; gap: 16px;
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .apply-card:hover { border-color: var(--border-hover); background: var(--surface2); }
+  .apply-card-num {
+    font-size: 11px; letter-spacing: 3px; color: var(--muted);
+    text-transform: uppercase; font-weight: 400;
+  }
+  .apply-card h3 { font-size: 18px; font-weight: 400; line-height: 1.3; }
+  .apply-card p { font-size: 13px; color: var(--muted); line-height: 1.65; flex: 1; }
+  .apply-divider { height: 1px; background: var(--border); }
+  .apply-btn {
+    padding: 11px 20px; border-radius: 8px;
+    border: 1px solid var(--border-hover);
+    background: transparent; color: var(--text);
+    font-size: 12px; font-weight: 400; letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, border-color 0.2s;
+    display: flex; align-items: center; gap: 8px; justify-content: center;
+    width: 100%;
+  }
+  .apply-btn:hover { background: var(--surface2); border-color: rgba(255,255,255,0.2); }
+  .apply-card.featured { border-color: rgba(255,255,255,0.12); }
+  .apply-card.featured .apply-btn {
+    background: var(--text); color: var(--bg);
+    border-color: var(--text); font-weight: 500;
+  }
+  .apply-card.featured .apply-btn:hover { background: rgba(232,232,240,0.88); }
+
+  /* ─── STUDIOS ─── */
+  #studios { background: var(--bg); }
+
+  .studios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px; max-width: 900px; width: 100%;
+    z-index: 1; position: relative;
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; background: var(--border);
+  }
+  .studio-card {
+    background: var(--surface); padding: 28px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    transition: background 0.2s; cursor: pointer;
+  }
+  .studio-card:hover { background: var(--surface2); }
+  .studio-logo {
+    width: 64px; height: 64px; border-radius: 12px;
+    border: 1px solid var(--border-hover); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--muted); text-align: center; padding: 5px;
+  }
+  .studio-card h4 { font-size: 13px; font-weight: 500; text-align: center; }
+  .studio-card span { font-size: 11px; color: var(--muted); text-align: center; letter-spacing: 0.5px; }
+  .studio-more { justify-content: center; border: 1px dashed var(--muted2); background: transparent; }
+  .studio-more:hover { background: var(--surface); border-color: var(--border-hover); border-style: solid; }
+
+  /* ─── CONTACT ─── */
+  #contact { background: var(--bg); }
+
+  .contact-wrap {
+    max-width: 520px; width: 100%; z-index: 1; position: relative;
+    display: flex; flex-direction: column; gap: 0; align-items: center;
+  }
+  .contact-links {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 32px;
+  }
+  .contact-link {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 18px;
+    color: var(--muted); text-decoration: none; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .contact-link:hover { border-color: var(--border-hover); color: var(--text); }
+  .contact-form {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: 12px; padding: 32px;
+    display: flex; flex-direction: column; gap: 12px;
+    background: var(--surface);
+  }
+  .contact-form input, .contact-form textarea {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; color: var(--text); font-size: 13px;
+    outline: none; transition: border-color 0.2s; font-family: inherit; resize: vertical;
+  }
+  .contact-form input:focus, .contact-form textarea:focus { border-color: var(--border-hover); }
+  .contact-form input::placeholder, .contact-form textarea::placeholder { color: var(--muted2); }
+  .submit-btn {
+    padding: 13px; border-radius: 8px;
+    background: var(--text); border: none; color: var(--bg);
+    font-size: 13px; font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.2s; margin-top: 4px;
+  }
+  .submit-btn:hover { opacity: 0.85; }
+
+  .footer-line {
+    position: absolute; bottom: 28px; color: var(--muted2); font-size: 11px;
+    letter-spacing: 1px; z-index: 1;
+  }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.08s; }
+  .reveal-delay-2 { transition-delay: 0.16s; }
+  .reveal-delay-3 { transition-delay: 0.24s; }
+
+  /* CANVAS */
+  #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+</style>
+</head>
+<body>
+
+<div id="scroll-bar"></div>
+<canvas id="particles"></canvas>
+
+<nav id="nav-dots">
+  <div class="dot active" data-section="0"></div>
+  <div class="dot" data-section="1"></div>
+  <div class="dot" data-section="2"></div>
+  <div class="dot" data-section="3"></div>
+  <div class="dot" data-section="4"></div>
+</nav>
+
+<!-- BÖLÜM 1: HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="logo-wrap">
+    <!-- LOGO: <img src="logo.png" style="width:120px;height:120px;border-radius:20px;object-fit:contain;"> -->
+    <div class="logo-img-placeholder">LOGO<br>BURAYA</div>
+    <div class="logo-name">Sake Studio</div>
+    <div class="hero-divider"></div>
+    <div class="logo-tagline">Creative Collective</div>
+  </div>
+  <div class="scroll-hint">
+    <span>Kaydır</span>
+    <svg width="14" height="20" viewBox="0 0 14 20" fill="none"><path d="M7 1v14M1 10l6 8 6-8" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</section>
+
+<!-- BÖLÜM 2: DESTEK -->
+<section id="donate">
+  <p class="section-label reveal">Destek</p>
+  <h2 class="section-title reveal">Projeyi Destekle</h2>
+  <div class="donate-cards">
+    <a href="#" class="donate-card reveal reveal-delay-1">
+      <!-- LOGO: <img src="patreon.png" style="width:48px;height:48px;border-radius:10px;object-fit:contain;"> -->
+      <div class="donate-logo">Donate 1</div>
+      <h3>Patreon</h3>
+      <p>Aylık destekle üretimi güçlendir, özel içeriklere eriş.</p>
+      <span class="donate-link">Destek ol <svg width="12" height="12" fill="none" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+    <a href="#" class="donate-card reveal reveal-delay-2">
+      <div class="donate-logo">Donate 2</div>
+      <h3>Ko-fi</h3>
+      <p>Tek seferlik ya da tekrarlayan bağış ile destek ver.</p>
+      <span class="donate-link">Destek ol <svg width="12" height="12" fill="none" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+    <a href="#" class="donate-card reveal reveal-delay-3">
+      <div class="donate-logo">Donate 3</div>
+      <h3>Open Collective</h3>
+      <p>Şeffaf fon yönetimi ile topluluğu büyüt.</p>
+      <span class="donate-link">Destek ol <svg width="12" height="12" fill="none" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+  </div>
+</section>
+
+<!-- BÖLÜM 3: BAŞVURU -->
+<section id="apply">
+  <p class="section-label reveal">Aramıza Katıl</p>
+  <h2 class="section-title reveal">Başvuru</h2>
+  <div class="apply-cards">
+
+    <div class="apply-card reveal reveal-delay-1">
+      <span class="apply-card-num">01</span>
+      <h3>Bağımsız Grup Başvurusu</h3>
+      <p>Bağımsız bir grup olarak bünyemize katılmak ve birlikte büyümek için başvuru yapın.</p>
+      <div class="apply-divider"></div>
+      <button class="apply-btn" onclick="window.location.href='bagimsiz-grup-basvuru.html'">Başvuru Formu</button>
+    </div>
+
+    <div class="apply-card featured reveal reveal-delay-2">
+      <span class="apply-card-num">02</span>
+      <h3>Kurumsal Sponsorluk</h3>
+      <p>Büyük ölçekli şirket iş birlikleri ve sponsorluk ortaklıkları için başvuru yapın.</p>
+      <div class="apply-divider"></div>
+      <button class="apply-btn" onclick="window.location.href='sponsorluk-basvuru.html'">Ortaklık Teklifi</button>
+    </div>
+
+    <div class="apply-card reveal reveal-delay-3">
+      <span class="apply-card-num">03</span>
+      <h3>Admin Üye Alımı</h3>
+      <p>Sake Studio yönetim ekibine katılmak ve idari süreçlerde yer almak için başvuru yapın.</p>
+      <div class="apply-divider"></div>
+      <button class="apply-btn" onclick="window.open('#','_blank')">Admin Başvurusu</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- BÖLÜM 4: STÜDYOLAR -->
+<section id="studios">
+  <p class="section-label reveal">Ekosistem</p>
+  <h2 class="section-title reveal">Bağlı Stüdyolar</h2>
+  <div class="studios-grid">
+    <div class="studio-card reveal reveal-delay-1">
+      <!-- LOGO: <img src="studio1.png" style="width:64px;height:64px;border-radius:12px;object-fit:contain;"> -->
+      <div class="studio-logo">Logo</div>
+      <h4>Stüdyo Adı 1</h4>
+      <span>Müzik / Tasarım</span>
+    </div>
+    <div class="studio-card reveal reveal-delay-2">
+      <div class="studio-logo">Logo</div>
+      <h4>Stüdyo Adı 2</h4>
+      <span>Video / Prodüksiyon</span>
+    </div>
+    <div class="studio-card reveal reveal-delay-3">
+      <div class="studio-logo">Logo</div>
+      <h4>Stüdyo Adı 3</h4>
+      <span>Yazılım / Geliştirme</span>
+    </div>
+    <div class="studio-card reveal reveal-delay-1">
+      <div class="studio-logo">Logo</div>
+      <h4>Stüdyo Adı 4</h4>
+      <span>Sanat / İllüstrasyon</span>
+    </div>
+    <div class="studio-card studio-more reveal reveal-delay-2">
+      <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="opacity:0.3"><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <h4>Ve Daha Fazlası</h4>
+      <span>Büyümeye devam ediyor</span>
+    </div>
+  </div>
+</section>
+
+<!-- BÖLÜM 5: İLETİŞİM -->
+<section id="contact">
+  <div class="contact-wrap">
+    <p class="section-label reveal">Ulaş Bize</p>
+    <h2 class="section-title reveal">İletişim</h2>
+    <div class="contact-links reveal">
+      <a href="#" class="contact-link">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.013.042.028.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Discord
+      </a>
+      <a href="#" class="contact-link">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+        Twitter / X
+      </a>
+      <a href="mailto:info@sakestudio.com" class="contact-link">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        E-posta
+      </a>
+    </div>
+    <form class="contact-form reveal" id="contact-form" name="iletisim" method="POST" data-netlify="true" onsubmit="submitContact(event)">
+      <input type="hidden" name="form-name" value="iletisim">
+      <input type="text" name="ad-soyad" placeholder="Ad Soyad" required>
+      <input type="email" name="eposta" placeholder="E-posta" required>
+      <textarea rows="4" name="mesaj" placeholder="Mesaj" required></textarea>
+      <button type="submit" class="submit-btn">Gönder</button>
+    </form>
+    <div class="contact-success" id="contact-success" style="display:none; text-align:center; padding:32px 0; flex-direction:column; align-items:center; gap:14px;">
+      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="opacity:0.6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M5 13l4 4L19 7"/></svg>
+      <p style="font-size:15px; font-weight:300;">Mesajınız iletildi.</p>
+      <p style="font-size:13px; color:var(--muted);">En kısa sürede geri döneceğiz.</p>
+    </div>
+  </div>
+  <div class="footer-line">© 2025 Sake Studio</div>
+</section>
+
+<script>
+// PARTICLES — subtle, monochrome
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W; this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.2; this.vy = (Math.random() - 0.5) * 0.2;
+    this.r = Math.random() * 1 + 0.3;
+    this.a = Math.random() * 0.15 + 0.05;
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+  }
+  draw() {
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200,200,210,${this.a})`; ctx.fill();
+  }
+}
+
+for (let i = 0; i < 60; i++) particles.push(new Particle());
+
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// SCROLL BAR
+window.addEventListener('scroll', () => {
+  const p = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  document.getElementById('scroll-bar').style.width = (p * 100) + '%';
+});
+
+// NAV DOTS
+const sections = ['hero','donate','apply','studios','contact'];
+const dots = document.querySelectorAll('.dot');
+dots.forEach((dot, i) => {
+  dot.addEventListener('click', () => document.getElementById(sections[i]).scrollIntoView({ behavior: 'smooth' }));
+});
+
+const sectionObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target.id);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+  });
+}, { threshold: 0.5 });
+sections.forEach(id => sectionObserver.observe(document.getElementById(id)));
+
+// REVEAL
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// CONTACT FORM
+function submitContact(e) {
+  e.preventDefault();
+  const form = e.target;
+  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
+    .then(() => {
+      document.getElementById('contact-form').style.display = 'none';
+      const s = document.getElementById('contact-success');
+      s.style.display = 'flex';
+    })
+    .catch(() => form.submit());
+}
+</script>
+</body>
+</html>

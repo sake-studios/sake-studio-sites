@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurumsal Sponsorluk — Sake Studio</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0c0c0e;
+    --surface: #131316;
+    --surface2: #1c1c21;
+    --text: #e8e8f0;
+    --muted: #6b6b78;
+    --muted2: #3a3a44;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+  }
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  .page {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 24px; position: relative; overflow: hidden;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .back-link {
+    position: fixed; top: 28px; left: 28px; z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--text); }
+
+  .form-wrap {
+    width: 100%; max-width: 560px;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .form-header { margin-bottom: 40px; }
+  .form-num { font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+  .form-title { font-size: clamp(24px, 4vw, 36px); font-weight: 300; letter-spacing: -0.5px; line-height: 1.2; }
+  .form-desc { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  .form-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 36px 32px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+  }
+  .field input, .field textarea, .field select {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px 16px;
+    color: var(--text); font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color 0.2s; resize: vertical;
+    appearance: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--border-hover); }
+  .field input::placeholder, .field textarea::placeholder { color: var(--muted2); }
+  .field .hint { font-size: 11px; color: var(--muted2); line-height: 1.5; }
+
+  .section-label-inner {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted2); padding: 4px 0 2px;
+    border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+
+  .contact-toggle {
+    display: flex; gap: 8px;
+  }
+  .toggle-btn {
+    flex: 1; padding: 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .toggle-btn.active { border-color: var(--border-hover); color: var(--text); background: var(--surface2); }
+
+  .submit-btn {
+    margin-top: 8px; padding: 14px;
+    background: var(--text); border: none; border-radius: 8px;
+    color: var(--bg); font-size: 13px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.2s; width: 100%;
+  }
+  .submit-btn:hover { opacity: 0.85; }
+
+  .success-msg {
+    display: none; text-align: center; padding: 40px 0;
+    flex-direction: column; align-items: center; gap: 16px;
+  }
+  .success-msg.show { display: flex; }
+  .success-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 1px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .success-msg h3 { font-size: 20px; font-weight: 300; }
+  .success-msg p { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 520px) { .form-card { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<a href="index.html" class="back-link">
+  <svg width="14" height="14" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Geri Dön
+</a>
+
+<div class="page">
+  <div class="form-wrap">
+    <div class="form-header">
+      <p class="form-num">02 — Başvuru</p>
+      <h1 class="form-title">Kurumsal<br>Sponsorluk</h1>
+      <p class="form-desc">Sake Studio ile ortaklık kurmak isteyen şirketler için başvuru formu. Temsilcinizin bilgilerini eksiksiz doldurun, en kısa sürede size ulaşacağız.</p>
+    </div>
+
+    <form class="form-card" id="form-card" name="kurumsal-sponsorluk" method="POST" data-netlify="true" onsubmit="submitForm(event)">
+      <input type="hidden" name="form-name" value="kurumsal-sponsorluk">
+
+      <p class="section-label-inner">Şirket Bilgileri</p>
+
+      <div class="field">
+        <label>Şirket Adı</label>
+        <input type="text" name="sirket-adi" id="company-name" placeholder="Şirketinizin tam adı" required>
+      </div>
+
+      <div class="form-divider"></div>
+      <p class="section-label-inner">Temsilci Bilgileri</p>
+
+      <div class="field">
+        <label>Temsilcinin Adı Soyadı</label>
+        <input type="text" name="temsilci-adi" id="rep-name" placeholder="Ad Soyad" required>
+      </div>
+
+      <div class="field">
+        <label>İletişim Tercihi</label>
+        <div class="contact-toggle">
+          <button type="button" class="toggle-btn active" id="btn-phone" onclick="switchContact('phone')">Telefon</button>
+          <button type="button" class="toggle-btn" id="btn-social" onclick="switchContact('social')">Sosyal Medya</button>
+        </div>
+      </div>
+
+      <div class="field" id="field-phone">
+        <label>Telefon Numarası</label>
+        <input type="tel" name="telefon" id="rep-phone" placeholder="+90 5XX XXX XX XX">
+        <span class="hint">Uluslararası formatta giriniz.</span>
+      </div>
+
+      <div class="field" id="field-social" style="display:none;">
+        <label>Sosyal Medya Hesabı</label>
+        <input type="text" name="sosyal-medya" id="rep-social" placeholder="@kullaniciadi veya profil linki">
+        <span class="hint">Bizimle iletişim kurulacak hesap.</span>
+      </div>
+
+      <div class="field">
+        <label>Kısa Not <span style="color:var(--muted2); font-size:10px; letter-spacing:1px;">(İsteğe bağlı)</span></label>
+        <textarea rows="3" name="not" id="note" placeholder="Ortaklık teklifiniz veya beklentileriniz hakkında kısa bir not..."></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">Teklifi Gönder</button>
+    </form>
+
+    <div class="success-msg" id="success">
+      <div class="success-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h3>Teklifiniz Alındı</h3>
+      <p>Temsilcinizle en kısa sürede iletişime geçeceğiz.<br>İlginiz için teşekkür ederiz.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+let mode = 'phone';
+
+function switchContact(type) {
+  mode = type;
+  document.getElementById('btn-phone').classList.toggle('active', type === 'phone');
+  document.getElementById('btn-social').classList.toggle('active', type === 'social');
+  document.getElementById('field-phone').style.display = type === 'phone' ? 'flex' : 'none';
+  document.getElementById('field-social').style.display = type === 'social' ? 'flex' : 'none';
+}
+
+function submitForm(e) {
+  e.preventDefault();
+  const required = ['company-name', 'rep-name'];
+  const contactField = mode === 'phone' ? 'rep-phone' : 'rep-social';
+  required.push(contactField);
+  let valid = true;
+  required.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el.value.trim()) { el.style.borderColor = 'rgba(255,80,80,0.4)'; valid = false; }
+    else el.style.borderColor = '';
+  });
+  if (!valid) return;
+  const form = e.target;
+  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
+    .then(() => {
+      document.getElementById('form-card').style.display = 'none';
+      document.getElementById('success').classList.add('show');
+    })
+    .catch(() => form.submit());
+}
+</script>
+</body>
+</html>

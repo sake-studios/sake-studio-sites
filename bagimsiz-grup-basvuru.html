@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bağımsız Grup Başvurusu — Sake Studio</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0c0c0e;
+    --surface: #131316;
+    --surface2: #1c1c21;
+    --text: #e8e8f0;
+    --muted: #6b6b78;
+    --muted2: #3a3a44;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+  }
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  .page {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 24px;
+    position: relative; overflow: hidden;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .back-link {
+    position: fixed; top: 28px; left: 28px; z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--text); }
+
+  .form-wrap {
+    width: 100%; max-width: 560px;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .form-header { margin-bottom: 40px; }
+  .form-num { font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+  .form-title { font-size: clamp(24px, 4vw, 36px); font-weight: 300; letter-spacing: -0.5px; line-height: 1.2; }
+  .form-desc { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  .form-divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 36px 32px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+  }
+  .field input, .field textarea, .field select {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px 16px;
+    color: var(--text); font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color 0.2s; resize: vertical;
+    appearance: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--border-hover); }
+  .field input::placeholder, .field textarea::placeholder { color: var(--muted2); }
+  .field .hint { font-size: 11px; color: var(--muted2); line-height: 1.5; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .section-label-inner {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted2); padding: 4px 0 2px;
+    border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+
+  .submit-btn {
+    margin-top: 8px; padding: 14px;
+    background: var(--text); border: none; border-radius: 8px;
+    color: var(--bg); font-size: 13px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.2s; width: 100%;
+  }
+  .submit-btn:hover { opacity: 0.85; }
+
+  .success-msg {
+    display: none; text-align: center; padding: 40px 0;
+    flex-direction: column; align-items: center; gap: 16px;
+  }
+  .success-msg.show { display: flex; }
+  .success-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 1px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .success-msg h3 { font-size: 20px; font-weight: 300; }
+  .success-msg p { font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 520px) { .field-row { grid-template-columns: 1fr; } .form-card { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<a href="index.html" class="back-link">
+  <svg width="14" height="14" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Geri Dön
+</a>
+
+<div class="page">
+  <div class="form-wrap">
+    <div class="form-header">
+      <p class="form-num">01 — Başvuru</p>
+      <h1 class="form-title">Bağımsız Grup<br>Başvurusu</h1>
+      <p class="form-desc">Ekibinizi Sake Studio bünyesine dahil etmek için aşağıdaki formu eksiksiz doldurun. Başvurunuz incelendikten sonra temsilcinizle iletişime geçilecektir.</p>
+    </div>
+
+    <form class="form-card" id="form-card" name="bagimsiz-grup" method="POST" data-netlify="true" onsubmit="submitForm(event)">
+      <input type="hidden" name="form-name" value="bagimsiz-grup">
+
+      <p class="section-label-inner">Ekip Bilgileri</p>
+
+      <div class="field">
+        <label>Ekibinizin Adı</label>
+        <input type="text" name="ekip-adi" id="team-name" placeholder="Ekip veya grup adınız" required>
+      </div>
+
+      <div class="field">
+        <label>Ekip Üye Sayısı</label>
+        <input type="number" name="uye-sayisi" id="team-size" placeholder="Kaç kişisiniz?" min="1" required>
+        <span class="hint">Aktif olarak çalışan üye sayısını giriniz.</span>
+      </div>
+
+      <div class="field">
+        <label>Ekibin Sosyal Medya Hesabı</label>
+        <input type="text" name="ekip-sosyal-medya" id="team-social" placeholder="Örn: twitter.com/ekibiniz veya @ekibiniz" required>
+        <span class="hint">Grubun genel hesabı — birden fazlaysa virgülle ayırın.</span>
+      </div>
+
+      <div class="form-divider" style="margin:4px 0;"></div>
+      <p class="section-label-inner">Temsilci Bilgileri</p>
+
+      <div class="field">
+        <label>Temsilcinin Adı</label>
+        <input type="text" name="temsilci-adi" id="rep-name" placeholder="Ad Soyad">
+      </div>
+
+      <div class="field">
+        <label>Temsilcinin Sosyal Medya Hesabı</label>
+        <input type="text" name="temsilci-sosyal-medya" id="rep-social" placeholder="Örn: @kullaniciadi veya profil linki" required>
+        <span class="hint">Bizimle iletişim kurulacak hesap.</span>
+      </div>
+
+      <button type="submit" class="submit-btn">Başvuruyu Gönder</button>
+    </form>
+
+    <div class="success-msg" id="success">
+      <div class="success-icon">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h3>Başvurunuz Alındı</h3>
+      <p>Ekibinizle en kısa sürede iletişime geçeceğiz.<br>Bizi tercih ettiğiniz için teşekkür ederiz.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitForm(e) {
+  e.preventDefault();
+  const fields = ['team-name','team-size','team-social','rep-social'];
+  let valid = true;
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el.value.trim()) { el.style.borderColor = 'rgba(255,80,80,0.4)'; valid = false; }
+    else el.style.borderColor = '';
+  });
+  if (!valid) return;
+  const form = e.target;
+  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
+    .then(() => {
+      document.getElementById('form-card').style.display = 'none';
+      document.getElementById('success').classList.add('show');
+    })
+    .catch(() => form.submit());
+}
+</script>
+</body>
+</html>
