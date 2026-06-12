@@ -355,21 +355,39 @@ function toggleSubmit() {
 
 function submitForm(e) {
   e.preventDefault();
+  
   const required = ['first-name', 'last-name', 'age', 'phone', 'email', 'social', 'role', 'bio'];
   let valid = true;
+  
   required.forEach(id => {
     const el = document.getElementById(id);
-    if (!el.value.trim()) { el.style.borderColor = 'rgba(255,80,80,0.4)'; valid = false; }
-    else el.style.borderColor = '';
+    if (!el.value.trim()) { 
+      el.style.borderColor = 'rgba(255,80,80,0.4)'; 
+      valid = false; 
+    } else {
+      el.style.borderColor = '';
+    }
   });
+  
   if (!valid) return;
+  
   const form = e.target;
-  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
-    .then(() => {
+  const formData = new FormData(form);
+  
+  fetch('/', { 
+    method: 'POST', 
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}, 
+    body: new URLSearchParams(formData).toString() 
+  })
+  .then(response => {
+    if (response.ok) {
       document.getElementById('form-card').style.display = 'none';
       document.getElementById('success').classList.add('show');
-    })
-    .catch(() => form.submit());
+    } else {
+      throw new Error('Netlify response not ok');
+    }
+  })
+  .catch(() => form.submit());
 }
 </script>
 </body>

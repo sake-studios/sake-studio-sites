@@ -183,21 +183,41 @@
 <script>
 function submitForm(e) {
   e.preventDefault();
-  const fields = ['team-name','team-size','team-social','rep-social'];
+  
+  // Sadece HTML'de 'required' olan alanları JavaScript ile doğrula
+  const requiredFields = ['team-name', 'team-size', 'team-social', 'rep-social'];
   let valid = true;
-  fields.forEach(id => {
+  
+  requiredFields.forEach(id => {
     const el = document.getElementById(id);
-    if (!el.value.trim()) { el.style.borderColor = 'rgba(255,80,80,0.4)'; valid = false; }
-    else el.style.borderColor = '';
+    if (!el.value.trim()) { 
+      el.style.borderColor = 'rgba(255,80,80,0.4)'; 
+      valid = false; 
+    } else {
+      el.style.borderColor = '';
+    }
   });
+  
   if (!valid) return;
+  
   const form = e.target;
-  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
-    .then(() => {
+  const formData = new FormData(form);
+  
+  // Netlify AJAX gönderiminde 'form-name' parametresi kritik önem taşır
+  fetch('/', { 
+    method: 'POST', 
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}, 
+    body: new URLSearchParams(formData).toString() 
+  })
+  .then(response => {
+    if (response.ok) {
       document.getElementById('form-card').style.display = 'none';
       document.getElementById('success').classList.add('show');
-    })
-    .catch(() => form.submit());
+    } else {
+      throw new Error('Netlify response not ok');
+    }
+  })
+  .catch(() => form.submit()); // Fetch başarısız olursa normal form post metoduna dön
 }
 </script>
 </body>

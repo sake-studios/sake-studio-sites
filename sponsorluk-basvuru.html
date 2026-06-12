@@ -208,23 +208,49 @@ function switchContact(type) {
 
 function submitForm(e) {
   e.preventDefault();
+  
+  // Genel zorunlu alanlar
   const required = ['company-name', 'rep-name'];
-  const contactField = mode === 'phone' ? 'rep-phone' : 'rep-social';
-  required.push(contactField);
+  
+  // Aktif olan iletişim tercihine göre zorunlu alanı seç, diğerini temizle
+  const activeContactField = mode === 'phone' ? 'rep-phone' : 'rep-social';
+  const inactiveContactField = mode === 'phone' ? 'rep-social' : 'rep-phone';
+  
+  // Pasif olan alanın verisini temizle ki Netlify'a boş gitsin/çakışmasın
+  document.getElementById(inactiveContactField).value = '';
+  
+  required.push(activeContactField);
+  
   let valid = true;
   required.forEach(id => {
     const el = document.getElementById(id);
-    if (!el.value.trim()) { el.style.borderColor = 'rgba(255,80,80,0.4)'; valid = false; }
-    else el.style.borderColor = '';
+    if (!el.value.trim()) { 
+      el.style.borderColor = 'rgba(255,80,80,0.4)'; 
+      valid = false; 
+    } else {
+      el.style.borderColor = '';
+    }
   });
+  
   if (!valid) return;
+  
   const form = e.target;
-  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
-    .then(() => {
+  const formData = new FormData(form);
+  
+  fetch('/', { 
+    method: 'POST', 
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}, 
+    body: new URLSearchParams(formData).toString() 
+  })
+  .then(response => {
+    if (response.ok) {
       document.getElementById('form-card').style.display = 'none';
       document.getElementById('success').classList.add('show');
-    })
-    .catch(() => form.submit());
+    } else {
+      throw new Error('Netlify response not ok');
+    }
+  })
+  .catch(() => form.submit());
 }
 </script>
 </body>
