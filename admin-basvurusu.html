@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Üye Başvurusu — Sake Studio</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0c0c0e;
+    --surface: #131316;
+    --surface2: #1c1c21;
+    --text: #e8e8f0;
+    --muted: #6b6b78;
+    --muted2: #3a3a44;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+  }
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  .page {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 80px 24px; position: relative;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .back-link {
+    position: fixed; top: 28px; left: 28px; z-index: 10;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--text); }
+
+  .form-wrap {
+    width: 100%; max-width: 580px;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .form-header { margin-bottom: 40px; }
+  .form-num { font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+  .form-title { font-size: clamp(24px, 4vw, 36px); font-weight: 300; letter-spacing: -0.5px; line-height: 1.2; }
+  .form-desc { margin-top: 12px; font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 36px 32px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); font-weight: 400;
+  }
+  .field input, .field textarea, .field select {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px 16px;
+    color: var(--text); font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color 0.2s; resize: vertical;
+    appearance: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--border-hover); }
+  .field input::placeholder, .field textarea::placeholder { color: var(--muted2); }
+  .field .hint { font-size: 11px; color: var(--muted2); line-height: 1.5; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .section-label-inner {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted2); padding: 4px 0 2px;
+    border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+
+  /* KİTAP KUTUSU */
+  .handbook-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .handbook-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+    transition: background 0.2s;
+  }
+  .handbook-header:hover { background: var(--surface2); }
+  .handbook-header-left { display: flex; align-items: center; gap: 10px; }
+  .handbook-header-left span { font-size: 12px; letter-spacing: 1px; color: var(--muted); }
+  .handbook-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .handbook-chevron {
+    transition: transform 0.3s; color: var(--muted2);
+    flex-shrink: 0;
+  }
+  .handbook-chevron.open { transform: rotate(180deg); }
+  .handbook-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+    border-top: 0px solid var(--border);
+  }
+  .handbook-body.open {
+    max-height: 480px;
+    border-top: 1px solid var(--border);
+  }
+  .handbook-scroll {
+    overflow-y: auto; max-height: 480px;
+    padding: 20px; font-size: 12px; line-height: 1.75;
+    color: var(--muted);
+  }
+  .handbook-scroll::-webkit-scrollbar { width: 4px; }
+  .handbook-scroll::-webkit-scrollbar-track { background: transparent; }
+  .handbook-scroll::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 4px; }
+  .handbook-scroll h4 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text); margin: 20px 0 8px; font-weight: 500; }
+  .handbook-scroll h4:first-child { margin-top: 0; }
+  .handbook-scroll p { margin-bottom: 6px; }
+  .handbook-scroll ul { padding-left: 16px; margin-bottom: 6px; }
+  .handbook-scroll ul li { margin-bottom: 4px; }
+
+  /* ONAY KUTUSU */
+  .checkbox-field {
+    display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+  }
+  .checkbox-field input[type="checkbox"] {
+    width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px;
+    accent-color: var(--text); cursor: pointer;
+    background: var(--bg); border: 1px solid var(--border-hover);
+    border-radius: 4px; padding: 0;
+  }
+  .checkbox-field span { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  .submit-btn {
+    margin-top: 4px; padding: 14px;
+    background: var(--text); border: none; border-radius: 8px;
+    color: var(--bg); font-size: 13px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.2s; width: 100%;
+    opacity: 0.4; pointer-events: none;
+  }
+  .submit-btn.active { opacity: 1; pointer-events: all; }
+  .submit-btn.active:hover { opacity: 0.85; }
+
+  /* BAŞARI */
+  .success-msg {
+    display: none; text-align: center; padding: 48px 0;
+    flex-direction: column; align-items: center; gap: 16px;
+  }
+  .success-msg.show { display: flex; }
+  .success-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 1px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .success-msg h3 { font-size: 22px; font-weight: 300; }
+  .success-msg .success-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .success-timer {
+    margin-top: 8px; font-size: 11px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--muted2);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 8px 20px;
+  }
+
+  @media (max-width: 520px) { .field-row { grid-template-columns: 1fr; } .form-card { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<a href="index.html" class="back-link">
+  <svg width="14" height="14" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Geri Dön
+</a>
+
+<div class="page">
+  <div class="form-wrap">
+
+    <div class="form-header">
+      <p class="form-num">03 — Başvuru</p>
+      <h1 class="form-title">Admin Üye<br>Başvurusu</h1>
+      <p class="form-desc">Sake Studio yönetim ekibine katılmak isteyenler için resmi başvuru formu. Kılavuzu eksiksiz okuyup onayladıktan sonra başvurunuzu gönderebilirsiniz.</p>
+    </div>
+
+    <form class="form-card" id="form-card" name="admin-basvuru" method="POST" data-netlify="true" onsubmit="submitForm(event)">
+      <input type="hidden" name="form-name" value="admin-basvuru">
+
+      <p class="section-label-inner">Kişisel Bilgiler</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Ad</label>
+          <input type="text" name="ad" id="first-name" placeholder="Adınız" required>
+        </div>
+        <div class="field">
+          <label>Soyad</label>
+          <input type="text" name="soyad" id="last-name" placeholder="Soyadınız" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Yaş</label>
+        <input type="number" name="yas" id="age" placeholder="Yaşınız" min="13" max="99" required>
+      </div>
+
+      <div class="field">
+        <label>Telefon Numarası</label>
+        <input type="tel" name="telefon" id="phone" placeholder="+90 5XX XXX XX XX" required>
+        <span class="hint">Uluslararası formatta giriniz.</span>
+      </div>
+
+      <div class="field">
+        <label>E-posta Adresi</label>
+        <input type="email" name="eposta" id="email" placeholder="ornek@mail.com" required>
+      </div>
+
+      <div class="field">
+        <label>Sosyal Medya Hesabı</label>
+        <input type="text" name="sosyal-medya" id="social" placeholder="@kullaniciadi veya profil linki" required>
+        <span class="hint">Discord, Twitter veya tercih ettiğiniz platform.</span>
+      </div>
+
+      <div style="height:1px; background:var(--border);"></div>
+      <p class="section-label-inner">Başvuru Detayları</p>
+
+      <div class="field">
+        <label>Başvurduğunuz Rol</label>
+        <select name="rol" id="role" required>
+          <option value="" disabled selected style="color:#3a3a44;">Rol seçiniz</option>
+          <option value="normal-admin">Normal Admin</option>
+          <option value="alim-admin">Alım Admini</option>
+          <option value="grup-baglanti-admin">Grup Bağlantı Admini</option>
+          <option value="proje-admin">Proje Admini</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Kendinizi Tanıtın</label>
+        <textarea rows="4" name="tanitim" id="bio" placeholder="Deneyimleriniz, yetenekleriniz ve bu role neden başvurduğunuzu kısaca anlatın." required></textarea>
+      </div>
+
+      <div style="height:1px; background:var(--border);"></div>
+      <p class="section-label-inner">Çalışan El Kitabı</p>
+
+      <!-- KİTAP TOGGLE -->
+      <div class="handbook-box">
+        <div class="handbook-header" onclick="toggleHandbook()">
+          <div class="handbook-header-left">
+            <div class="handbook-icon">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <span>Sake Studio Resmi Çalışan El Kitabı ve Yönetim Kılavuzu</span>
+          </div>
+          <svg class="handbook-chevron" id="handbook-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div class="handbook-body" id="handbook-body">
+          <div class="handbook-scroll" id="handbook-scroll">
+
+            <h4>1. Roller ve Yetki Sınırları</h4>
+            <p><strong style="color:var(--text); font-weight:500;">Kurucu:</strong> Organizasyonun temel stratejik kararlarını alan en üst düzey roldür. Normal üyelerin doğrudan iletişim kuramayacağı tek otoritedir.</p>
+            <p><strong style="color:var(--text); font-weight:500;">Network Admini:</strong> Tüm sosyal medya hesapları ve dijital varlıkların tam yetkili yöneticisidir. Organizasyonu dışarıya karşı temsil eden 3 ana temsilciden biridir.</p>
+            <p><strong style="color:var(--text); font-weight:500;">Proje Admini:</strong> Tüm projelerin planlama, işleyiş ve denetim süreçlerinden sorumlu lider roldür. 3 ana temsilciden biridir.</p>
+            <p><strong style="color:var(--text); font-weight:500;">Grup Bağlantı Admini:</strong> Organizasyona bağlı gruplar arasındaki iletişimi ve koordinasyonu yürüten roldür. Yapı dışından gelen taleplerde ilk temas noktasıdır.</p>
+            <p><strong style="color:var(--text); font-weight:500;">Alım Adminleri:</strong> Büyüme ve genişleme süreçlerini yöneten, başvuruları değerlendiren ve yetenekli bağımsız grupları keşfeden roldür.</p>
+            <p><strong style="color:var(--text); font-weight:500;">Normal Adminler:</strong> Topluluk sohbetlerinde düzeni sağlayan, şikayetleri ve geri bildirimleri ilk elden teslim alan roldür.</p>
+
+            <h4>2. Davranış Kuralları</h4>
+            <ul>
+              <li>Karşı tarafa her zaman nezaketli ve profesyonel bir biçimde yaklaşılmalıdır.</li>
+              <li>Hiçbir koşulda ayrımcılık yapılamaz (LGBTQ+, ırk, inanç, ten rengi vb.).</li>
+              <li>Küfür, argo veya NSFW içerik kesinlikle yasaktır.</li>
+              <li>Stüdyo adına onaylanmamış taahhütte bulunulamaz.</li>
+              <li>Stüdyoyu temsil ederken kişisel görüşler kurumsal kimlikle karıştırılamaz.</li>
+            </ul>
+
+            <h4>3. Yasaklar</h4>
+            <ul>
+              <li>Bünyedeki grupların içerikleri izinsiz paylaşılamaz.</li>
+              <li>Stüdyo kaynakları kişisel çıkar için kullanılamaz.</li>
+              <li>Stüdyo adına yetkisiz açıklama veya anlaşma yapılamaz.</li>
+              <li>Stüdyo içi bilgiler dışarıya sızdırılamaz.</li>
+              <li>Anlaşmazlıklar yalnızca stüdyo içi kanallarla çözüme kavuşturulur.</li>
+            </ul>
+
+            <h4>4. Yaptırımlar</h4>
+            <ul>
+              <li>Kurallara aykırı davranan üyeye öncelikle yazılı uyarı yapılır.</li>
+              <li>İhlalin tekrarlanması durumunda yetkiler geçici olarak askıya alınabilir.</li>
+              <li>Ciddi ihlaller doğrudan stüdyodan çıkarma kararıyla sonuçlanabilir.</li>
+            </ul>
+
+            <h4>5. Ekip Üyeliği</h4>
+            <ul>
+              <li>Her üyenin rolü ve yetki sınırları önceden net biçimde belirlenir.</li>
+              <li>Hiçbir üye kendi rolünün dışına çıkarak karar alamaz.</li>
+              <li>Stüdyo içindeki hiyerarşi ve roller saygı çerçevesinde değerlendirilir.</li>
+            </ul>
+
+            <h4>6. Gizlilik</h4>
+            <p>Kurumsal şirketlerle yapılan görüşmeler, ticari sırlar ve stratejik planlar hiçbir koşulda dışarıya sızdırılamaz. Stüdyo bünyesinde edinilen tüm bilgiler gizli tutulur.</p>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ONAY -->
+      <label class="checkbox-field">
+        <input type="checkbox" id="agree-check" name="kılavuz-onay" value="evet" onchange="toggleSubmit()">
+        <span>Sake Studio Resmi Çalışan El Kitabı ve Yönetim Kılavuzu'nu eksiksiz okudum, tüm maddeleri anladım ve kabul ediyorum.</span>
+      </label>
+
+      <button type="submit" class="submit-btn" id="submit-btn">Başvuruyu Gönder</button>
+    </form>
+
+    <!-- BAŞARI -->
+    <div class="success-msg" id="success">
+      <div class="success-icon">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h3>Başvurunuz Alındı</h3>
+      <p class="success-sub">Bilgileriniz ekibimize iletildi.<br>En kısa sürede değerlendirmeye alınacaksınız.</p>
+      <div class="success-timer">24 saat içinde geri döneceğiz</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleHandbook() {
+  const body = document.getElementById('handbook-body');
+  const chevron = document.getElementById('handbook-chevron');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+function toggleSubmit() {
+  const checked = document.getElementById('agree-check').checked;
+  const btn = document.getElementById('submit-btn');
+  btn.classList.toggle('active', checked);
+}
+
+function submitForm(e) {
+  e.preventDefault();
+  const required = ['first-name', 'last-name', 'age', 'phone', 'email', 'social', 'role', 'bio'];
+  let valid = true;
+  required.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el.value.trim()) { el.style.borderColor = 'rgba(255,80,80,0.4)'; valid = false; }
+    else el.style.borderColor = '';
+  });
+  if (!valid) return;
+  const form = e.target;
+  fetch('/', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(new FormData(form)).toString() })
+    .then(() => {
+      document.getElementById('form-card').style.display = 'none';
+      document.getElementById('success').classList.add('show');
+    })
+    .catch(() => form.submit());
+}
+</script>
+</body>
+</html>
