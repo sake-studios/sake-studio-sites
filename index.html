@@ -736,6 +736,17 @@ function submitContact(e) {
     })
     .catch(() => form.submit());
 }
+
+// Disable right-click and common devtools shortcuts
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  const key = e.keyCode;
+  if (key === 123 ||
+      (e.ctrlKey && e.shiftKey && (key === 73 || key === 74)) ||
+      (e.ctrlKey && key === 85)) {
+    e.preventDefault();
+  }
+});
 </script>
 </body>
 </html>
